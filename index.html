@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaffeepedia — The Science of Coffee</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy-darkest:#020405;--navy-darker:#050a10;--navy-dark:#0a1018;--navy:#101a28;--navy-light:#182840;--navy-lighter:#203550;
+            --cream-dark:#d0ccc4;--cream:#eae7e0;--cream-light:#f5f3ef;--ivory:#fdfcfa;
+            --dark-bg-primary:var(--navy-darkest);--dark-bg-secondary:var(--navy-darker);--dark-bg-tertiary:var(--navy-dark);
+            --dark-text-primary:var(--cream);--dark-text-secondary:var(--cream-dark);--dark-text-muted:rgba(234,231,224,0.4);--dark-border:rgba(234,231,224,0.06);
+            --light-bg-primary:var(--cream);--light-bg-secondary:var(--ivory);--light-bg-tertiary:var(--cream-dark);
+            --light-text-primary:var(--navy-dark);--light-text-secondary:var(--navy);--light-text-muted:var(--navy-lighter);--light-border:rgba(10,16,24,0.1);
+            --bg-primary:var(--dark-bg-primary);--bg-secondary:var(--dark-bg-secondary);--bg-tertiary:var(--dark-bg-tertiary);
+            --text-primary:var(--dark-text-primary);--text-secondary:var(--dark-text-secondary);--text-muted:var(--dark-text-muted);--border:var(--dark-border);
+            --ease-out-expo:cubic-bezier(0.16,1,0.3,1);
+        }
+        [data-theme="light"]{--bg-primary:var(--light-bg-primary);--bg-secondary:var(--light-bg-secondary);--bg-tertiary:var(--light-bg-tertiary);--text-primary:var(--light-text-primary);--text-secondary:var(--light-text-secondary);--text-muted:var(--light-text-muted);--border:var(--light-border)}
+        *{margin:0;padding:0;box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        body{font-family:'Outfit',sans-serif;background:var(--bg-primary);color:var(--text-primary);overflow-x:hidden;transition:background 1s var(--ease-out-expo)}
+        
+        /* Cursor */
+        .cursor{position:fixed;width:20px;height:20px;border:1px solid var(--text-primary);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width 0.3s,height 0.3s}
+        .cursor.hovering{width:60px;height:60px;background:var(--text-primary)}
+        .cursor-dot{position:fixed;width:6px;height:6px;background:var(--text-primary);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%)}
+        .cursor.hovering+.cursor-dot{opacity:0}
+        
+        /* Loader */
+        .loader{position:fixed;inset:0;background:var(--navy-darkest);z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        .loader-bg{position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,var(--navy-light) 0%,transparent 40%),radial-gradient(circle at 70% 80%,var(--navy) 0%,transparent 40%);opacity:0.3;animation:loaderBgPulse 4s ease-in-out infinite}
+        @keyframes loaderBgPulse{0%,100%{opacity:0.2;transform:scale(1)}50%{opacity:0.4;transform:scale(1.1)}}
+        .loader-content{position:relative;z-index:2;text-align:center}
+        .loader-logo{width:160px;height:160px;border:1px solid rgba(234,231,224,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 48px;position:relative;animation:logoFloat 3s ease-in-out infinite}
+        @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        .loader-logo::before{content:'';position:absolute;inset:-20px;border:1px solid rgba(234,231,224,0.05);border-radius:50%;animation:ringRotate 10s linear infinite}
+        .loader-logo::after{content:'';position:absolute;inset:-40px;border:1px solid rgba(234,231,224,0.03);border-radius:50%;animation:ringRotate 15s linear infinite reverse}
+        @keyframes ringRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        .loader-logo span{font-family:'Playfair Display',serif;font-size:64px;font-style:italic;color:var(--cream);opacity:0;animation:logoReveal 1s var(--ease-out-expo) 0.3s forwards}
+        @keyframes logoReveal{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+        .loader-title{font-family:'Playfair Display',serif;font-size:clamp(32px,6vw,64px);color:var(--cream);letter-spacing:20px;text-transform:uppercase;opacity:0;transform:translateY(100%);animation:textSlideUp 1s var(--ease-out-expo) 0.5s forwards}
+        .loader-subtitle{font-size:13px;color:var(--cream-dark);letter-spacing:8px;text-transform:uppercase;margin-top:24px;opacity:0;animation:fadeIn 0.8s var(--ease-out-expo) 1s forwards}
+        @keyframes textSlideUp{to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeIn{to{opacity:1}}
+        .loader-progress{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);width:300px}
+        .loader-progress-bar{width:100%;height:1px;background:rgba(234,231,224,0.1);border-radius:10px;overflow:hidden}
+        .loader-progress-fill{width:0%;height:100%;background:var(--cream);transition:width 0.1s ease-out}
+        .loader-progress-text{font-size:12px;color:var(--cream-dark);letter-spacing:4px;margin-top:16px;text-align:center}
+        .loader.exit{animation:loaderExit 1.5s var(--ease-out-expo) forwards}
+        @keyframes loaderExit{0%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(0 0 100% 0)}}
+        
+        /* Scroll Progress */
+        .scroll-progress{position:fixed;top:0;left:0;width:100%;height:3px;background:rgba(234,231,224,0.1);z-index:10000;opacity:0;transition:opacity 0.3s}
+        .scroll-progress.visible{opacity:1}
+        .scroll-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--text-primary),var(--text-muted))}
+        
+        /* Nav */
+        nav{position:fixed;top:0;left:0;width:100%;padding:28px 60px;display:flex;justify-content:space-between;align-items:center;z-index:1000;transition:all 0.6s var(--ease-out-expo);opacity:0;transform:translateY(-40px)}
+        nav.visible{opacity:1;transform:translateY(0)}
+        nav.scrolled{padding:16px 60px;background:rgba(5,10,16,0.85);backdrop-filter:blur(40px);border-bottom:1px solid var(--border)}
+        [data-theme="light"] nav.scrolled{background:rgba(234,231,224,0.85)}
+        .nav-logo{display:flex;align-items:center;gap:16px;text-decoration:none}
+        .nav-logo-mark{width:52px;height:52px;background:var(--text-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.5s var(--ease-out-expo)}
+        .nav-logo:hover .nav-logo-mark{transform:scale(1.1) rotate(-5deg)}
+        .nav-logo-mark span{font-family:'Playfair Display',serif;font-size:26px;font-style:italic;color:var(--bg-primary)}
+        .nav-logo-text{font-family:'Playfair Display',serif;font-size:26px;color:var(--text-primary);letter-spacing:4px}
+        .nav-menu{display:flex;align-items:center;gap:16px}
+        .nav-links{display:flex;gap:6px;background:var(--bg-secondary);padding:6px;border-radius:100px;border:1px solid var(--border)}
+        .nav-links a{font-size:14px;font-weight:500;color:var(--text-muted);text-decoration:none;padding:14px 22px;border-radius:100px;transition:all 0.4s var(--ease-out-expo);position:relative;overflow:hidden}
+        .nav-links a::before{content:'';position:absolute;inset:0;background:var(--text-primary);transform:scaleX(0);transform-origin:right;transition:transform 0.5s var(--ease-out-expo);z-index:-1;border-radius:100px}
+        .nav-links a:hover{color:var(--text-primary)}
+        .nav-links a.active{color:var(--bg-primary)}
+        .nav-links a.active::before{transform:scaleX(1);transform-origin:left}
+        .nav-cta{background:var(--text-primary);color:var(--bg-primary);padding:16px 36px;border-radius:100px;font-size:14px;font-weight:600;text-decoration:none;transition:all 0.4s var(--ease-out-expo)}
+        .nav-cta:hover{transform:translateY(-2px);box-shadow:0 20px 40px rgba(0,0,0,0.3)}
+        .nav-right{display:flex;align-items:center;gap:16px}
+        .theme-toggle{width:52px;height:52px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.5s var(--ease-out-expo);position:relative;overflow:hidden}
+        .theme-toggle::before{content:'';position:absolute;inset:0;background:var(--text-primary);border-radius:50%;transform:scale(0);transition:transform 0.5s var(--ease-out-expo)}
+        .theme-toggle:hover::before{transform:scale(1)}
+        .theme-toggle svg{width:22px;height:22px;fill:var(--text-primary);transition:all 0.5s var(--ease-out-expo);position:relative;z-index:1}
+        .theme-toggle:hover svg{fill:var(--bg-primary);transform:rotate(360deg)}
+        .mobile-menu-btn{display:none;width:52px;height:52px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:14px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+        .mobile-menu-btn span{width:22px;height:2px;background:var(--text-primary);transition:all 0.4s var(--ease-out-expo)}
+        
+        /* Hero */
+        .hero{min-height:100vh;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+        .hero-canvas{position:absolute;inset:0;pointer-events:none}
+        .hero-bg{position:absolute;inset:0;overflow:hidden}
+        .hero-orb{position:absolute;border-radius:50%;filter:blur(150px);opacity:0.2;will-change:transform}
+        .hero-orb-1{width:1000px;height:1000px;top:-400px;right:-300px;background:var(--navy-light);animation:orbFloat1 30s ease-in-out infinite}
+        .hero-orb-2{width:800px;height:800px;bottom:-300px;left:-200px;background:var(--navy);animation:orbFloat2 25s ease-in-out infinite}
+        .hero-orb-3{width:500px;height:500px;top:30%;left:40%;background:var(--navy-lighter);opacity:0.1;animation:orbFloat3 20s ease-in-out infinite}
+        @keyframes orbFloat1{0%,100%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(50px,-80px) rotate(90deg)}50%{transform:translate(-40px,40px) rotate(180deg)}75%{transform:translate(60px,60px) rotate(270deg)}}
+        @keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-60px,-40px) scale(1.1)}66%{transform:translate(40px,60px) scale(0.9)}}
+        @keyframes orbFloat3{0%,100%{transform:translate(0,0)}50%{transform:translate(100px,-50px)}}
+        .hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:100px 100px;opacity:0.25;mask-image:radial-gradient(ellipse at center,black 0%,transparent 70%);animation:gridPerspective 20s linear infinite}
+        @keyframes gridPerspective{0%{background-position:0 0}100%{background-position:100px 100px}}
+        .hero-grain{position:absolute;inset:0;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grainAnim 0.3s steps(6) infinite}
+        @keyframes grainAnim{0%,100%{transform:translate(0,0)}50%{transform:translate(-2%,-2%)}}
+        .hero-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 0%,var(--bg-primary) 100%);pointer-events:none}
+        .hero-content{text-align:center;max-width:1400px;padding:0 60px;position:relative;z-index:10}
+        .hero-eyebrow{font-size:13px;font-weight:600;color:var(--text-muted);letter-spacing:10px;text-transform:uppercase;margin-bottom:48px;opacity:0}
+        .hero-eyebrow.animate{animation:fadeSlideUp 1s var(--ease-out-expo) forwards}
+        .hero-title{font-family:'Playfair Display',serif;font-size:clamp(52px,12vw,160px);font-weight:400;color:var(--text-primary);line-height:0.9;margin-bottom:56px}
+        .hero-title .line{display:block;overflow:hidden}
+        .hero-title .line-inner{display:block;transform:translateY(105%);transition:transform 1.2s var(--ease-out-expo)}
+        .hero-title.animate .line-inner{transform:translateY(0)}
+        .hero-title .line:nth-child(2) .line-inner{transition-delay:0.1s}
+        .hero-title .line:nth-child(3) .line-inner{transition-delay:0.2s}
+        .hero-title em{font-style:italic;position:relative}
+        .hero-title em::after{content:'';position:absolute;bottom:5%;left:0;width:0;height:4px;background:var(--text-primary);transition:width 1.2s var(--ease-out-expo) 0.8s}
+        .hero-title.animate em::after{width:100%}
+        .hero-subtitle{font-size:22px;color:var(--text-secondary);max-width:750px;margin:0 auto 72px;line-height:1.8;font-weight:300;opacity:0;transform:translateY(40px);transition:all 1s var(--ease-out-expo) 0.4s}
+        .hero-subtitle.animate{opacity:1;transform:translateY(0)}
+        .hero-ctas{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;opacity:0;transform:translateY(40px);transition:all 1s var(--ease-out-expo) 0.6s}
+        .hero-ctas.animate{opacity:1;transform:translateY(0)}
+        @keyframes fadeSlideUp{to{opacity:1;transform:translateY(0)}}
+        .btn-primary{background:var(--text-primary);color:var(--bg-primary);padding:26px 60px;border-radius:100px;font-size:15px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:16px;transition:all 0.6s var(--ease-out-expo);position:relative;overflow:hidden}
+        .btn-primary::before{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:var(--bg-tertiary);border-radius:50%;transform:translate(-50%,-50%);transition:all 0.6s var(--ease-out-expo)}
+        .btn-primary:hover::before{width:400px;height:400px}
+        .btn-primary span,.btn-primary svg{position:relative;z-index:1}
+        .btn-primary:hover{color:var(--text-primary);transform:translateY(-6px);box-shadow:0 30px 60px rgba(0,0,0,0.4)}
+        .btn-primary:hover svg{transform:translateX(6px)}
+        .btn-secondary{background:transparent;color:var(--text-primary);padding:26px 60px;border-radius:100px;font-size:15px;font-weight:500;text-decoration:none;border:1px solid var(--border);transition:all 0.6s var(--ease-out-expo);position:relative;overflow:hidden}
+        .btn-secondary::before{content:'';position:absolute;inset:0;background:var(--bg-tertiary);transform:translateY(100%);transition:transform 0.5s var(--ease-out-expo)}
+        .btn-secondary span{position:relative;z-index:1}
+        .btn-secondary:hover::before{transform:translateY(0)}
+        .btn-secondary:hover{border-color:var(--text-muted);transform:translateY(-6px)}
+        .hero-scroll{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:20px;opacity:0;transition:opacity 1s var(--ease-out-expo) 1s}
+        .hero-scroll.animate{opacity:1}
+        .hero-scroll-text{font-size:10px;color:var(--text-muted);letter-spacing:5px;text-transform:uppercase}
+        .hero-scroll-line{width:1px;height:100px;background:linear-gradient(to bottom,var(--text-muted),transparent);position:relative;overflow:hidden}
+        .hero-scroll-line::before{content:'';position:absolute;top:-100%;left:0;width:100%;height:50%;background:var(--text-primary);animation:scrollLineMove 2s ease-in-out infinite}
+        @keyframes scrollLineMove{0%{top:-50%}100%{top:150%}}
+        
+        /* Reveal Animations */
+        .reveal{opacity:0;transform:translateY(120px);transition:all 1.4s var(--ease-out-expo)}
+        .reveal.active{opacity:1;transform:translateY(0)}
+        .reveal-scale{opacity:0;transform:scale(0.8);transition:all 1.4s var(--ease-out-expo)}
+        .reveal-scale.active{opacity:1;transform:scale(1)}
+        .reveal-left{opacity:0;transform:translateX(-150px);transition:all 1.4s var(--ease-out-expo)}
+        .reveal-left.active{opacity:1;transform:translateX(0)}
+        .reveal-right{opacity:0;transform:translateX(150px);transition:all 1.4s var(--ease-out-expo)}
+        .reveal-right.active{opacity:1;transform:translateX(0)}
+        .reveal-rotate{opacity:0;transform:perspective(1000px) rotateX(20deg) translateY(80px);transition:all 1.4s var(--ease-out-expo)}
+        .reveal-rotate.active{opacity:1;transform:perspective(1000px) rotateX(0) translateY(0)}
+        .delay-1{transition-delay:0.1s!important}.delay-2{transition-delay:0.2s!important}.delay-3{transition-delay:0.3s!important}.delay-4{transition-delay:0.4s!important}.delay-5{transition-delay:0.5s!important}.delay-6{transition-delay:0.6s!important}
+        
+        /* Stats */
+        .stats{background:var(--bg-secondary);padding:140px 60px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+        .stats-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,var(--bg-tertiary) 0%,transparent 70%);opacity:0.5}
+        .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:60px;max-width:1500px;margin:0 auto;position:relative}
+        .stat-item{text-align:center}
+        .stat-number{font-family:'Playfair Display',serif;font-size:clamp(52px,8vw,96px);font-weight:400;color:var(--text-primary);margin-bottom:20px;line-height:1}
+        .stat-label{font-size:12px;color:var(--text-muted);letter-spacing:5px;text-transform:uppercase}
+        
+        /* Sections */
+        section{padding:220px 60px;position:relative;overflow:hidden}
+        .section-header{max-width:1100px;margin-bottom:140px}
+        .section-header.centered{text-align:center;margin-left:auto;margin-right:auto}
+        .section-eyebrow{font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:8px;text-transform:uppercase;margin-bottom:32px;display:flex;align-items:center;gap:28px}
+        .section-header.centered .section-eyebrow{justify-content:center}
+        .section-eyebrow::before,.section-eyebrow::after{content:'';width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+        .section-title{font-family:'Playfair Display',serif;font-size:clamp(44px,7vw,88px);font-weight:400;color:var(--text-primary);line-height:1.05;margin-bottom:36px}
+        .section-subtitle{font-size:20px;color:var(--text-secondary);line-height:1.9;font-weight:300;max-width:680px}
+        .section-header.centered .section-subtitle{margin:0 auto}
+        
+        /* Water Section */
+        .water-section{background:var(--bg-primary);min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden}
+        .water-particles{position:absolute;inset:0;pointer-events:none}
+        .water-particle{position:absolute;background:var(--text-muted);border-radius:50%;opacity:0}
+        .water-content{display:grid;grid-template-columns:1fr 1fr;gap:120px;align-items:center;max-width:1700px;margin:0 auto;width:100%;padding:0 60px}
+        .water-image{position:relative}
+        .water-image-container{position:relative;border-radius:40px;overflow:hidden;box-shadow:0 100px 200px rgba(0,0,0,0.5);transition:transform 0.6s var(--ease-out-expo)}
+        .water-image-container:hover{transform:scale(1.02)}
+        .water-image img{width:100%;height:auto;display:block;transition:transform 1.2s var(--ease-out-expo)}
+        .water-image-container:hover img{transform:scale(1.08)}
+        .water-image-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180%;height:180%;background:radial-gradient(circle,var(--navy-light) 0%,transparent 50%);opacity:0.4;filter:blur(80px);z-index:-1;animation:glowPulse 4s ease-in-out infinite}
+        @keyframes glowPulse{0%,100%{opacity:0.3;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.5;transform:translate(-50%,-50%) scale(1.1)}}
+        .water-text .section-header{margin-bottom:56px}
+        .water-features{display:flex;flex-direction:column;gap:24px}
+        .water-feature{display:flex;align-items:center;gap:28px;padding:36px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:24px;transition:all 0.6s var(--ease-out-expo);cursor:pointer}
+        .water-feature:hover{transform:translateX(16px);border-color:var(--text-muted);box-shadow:0 30px 60px rgba(0,0,0,0.2)}
+        .water-feature-icon{width:64px;height:64px;background:var(--bg-tertiary);border-radius:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.6s var(--ease-out-expo)}
+        .water-feature:hover .water-feature-icon{background:var(--text-primary);color:var(--bg-primary);transform:scale(1.1) rotate(-5deg)}
+        .water-feature-icon svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.5}
+        .water-feature-content h4{font-family:'Playfair Display',serif;font-size:24px;color:var(--text-primary);margin-bottom:10px}
+        .water-feature-content p{font-size:15px;color:var(--text-secondary);line-height:1.7;font-weight:300}
+        
+        /* Explore */
+        .explore{background:var(--bg-secondary)}
+        .explore-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;max-width:1700px;margin:0 auto}
+        .explore-card{background:var(--bg-primary);border:1px solid var(--border);border-radius:32px;padding:64px 56px;position:relative;overflow:hidden;transition:all 0.7s var(--ease-out-expo);cursor:pointer}
+        .explore-card:hover{transform:translateY(-20px);border-color:var(--text-muted);box-shadow:0 60px 120px rgba(0,0,0,0.35)}
+        .explore-icon{width:100px;height:100px;border:1px solid var(--border);border-radius:28px;display:flex;align-items:center;justify-content:center;margin-bottom:44px;color:var(--text-primary);transition:all 0.6s var(--ease-out-expo)}
+        .explore-card:hover .explore-icon{background:var(--text-primary);color:var(--bg-primary);border-color:var(--text-primary);transform:scale(1.1) rotate(-5deg)}
+        .explore-card-title{font-family:'Playfair Display',serif;font-size:34px;color:var(--text-primary);margin-bottom:20px}
+        .explore-card-desc{font-size:16px;color:var(--text-secondary);line-height:1.8;margin-bottom:40px;font-weight:300}
+        .explore-card-link{font-size:14px;font-weight:600;color:var(--text-primary);text-decoration:none;display:inline-flex;align-items:center;gap:14px;transition:gap 0.5s var(--ease-out-expo)}
+        .explore-card:hover .explore-card-link{gap:24px}
+        
+        /* Courses */
+        .courses{background:var(--bg-secondary)}
+        .courses-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:44px;max-width:1700px;margin:0 auto}
+        .course-card{background:var(--bg-primary);border:1px solid var(--border);border-radius:36px;overflow:hidden;display:grid;grid-template-columns:280px 1fr;transition:all 0.7s var(--ease-out-expo);cursor:pointer}
+        .course-card:hover{transform:translateY(-12px);border-color:var(--text-muted);box-shadow:0 50px 100px rgba(0,0,0,0.3)}
+        .course-visual{background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;padding:60px;color:var(--text-primary);position:relative}
+        .course-visual svg{position:relative;z-index:1;transition:all 0.7s var(--ease-out-expo)}
+        .course-card:hover .course-visual svg{transform:scale(1.15) rotate(-8deg)}
+        .course-content{padding:56px}
+        .course-level{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:4px;text-transform:uppercase;margin-bottom:20px}
+        .course-title{font-family:'Playfair Display',serif;font-size:32px;color:var(--text-primary);margin-bottom:20px}
+        .course-desc{font-size:16px;color:var(--text-secondary);line-height:1.8;margin-bottom:36px;font-weight:300}
+        .course-meta{display:flex;gap:36px;font-size:14px;color:var(--text-muted)}
+        
+        /* Market */
+        .market{background:var(--bg-secondary)}
+        .market-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;max-width:1700px;margin:0 auto}
+        .market-card{background:var(--bg-primary);border:1px solid var(--border);border-radius:32px;padding:56px;transition:all 0.6s var(--ease-out-expo);cursor:pointer;position:relative;overflow:hidden}
+        .market-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:4px;background:var(--text-primary);transform:scaleX(0);transform-origin:left;transition:transform 0.6s var(--ease-out-expo)}
+        .market-card:hover::before{transform:scaleX(1)}
+        .market-card:hover{transform:translateY(-12px);border-color:var(--text-muted);box-shadow:0 40px 80px rgba(0,0,0,0.2)}
+        .market-label{font-size:12px;color:var(--text-muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px}
+        .market-value{font-family:'Playfair Display',serif;font-size:64px;font-weight:400;color:var(--text-primary);margin-bottom:20px}
+        .market-change{font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px}
+        .market-change.up{color:#22c55e}.market-change.down{color:#ef4444}
+        
+        /* Subscribe */
+        .subscribe{background:var(--bg-primary);text-align:center}
+        .subscribe-inner{max-width:1100px;margin:0 auto}
+        .plans{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin:80px 0}
+        .plan-chip{background:var(--bg-secondary);border:1px solid var(--border);padding:24px 44px;border-radius:100px;font-size:16px;font-weight:500;color:var(--text-primary);cursor:pointer;transition:all 0.6s var(--ease-out-expo);position:relative;overflow:hidden}
+        .plan-chip::before{content:'';position:absolute;inset:0;background:var(--text-primary);transform:translateY(100%);transition:transform 0.5s var(--ease-out-expo)}
+        .plan-chip span{position:relative;z-index:1}
+        .plan-chip:hover::before{transform:translateY(0)}
+        .plan-chip:hover{color:var(--bg-primary);transform:translateY(-6px)}
+        .plan-chip.active{background:var(--text-primary);color:var(--bg-primary);border-color:var(--text-primary)}
+        
+        /* Footer */
+        footer{background:var(--bg-secondary);padding:160px 60px 80px;border-top:1px solid var(--border)}
+        .footer-grid{display:grid;grid-template-columns:2.5fr repeat(3,1fr);gap:120px;max-width:1700px;margin:0 auto 120px}
+        .footer-brand p{font-size:17px;color:var(--text-secondary);line-height:2;margin-top:36px;max-width:380px;font-weight:300}
+        .footer-col h4{font-size:12px;font-weight:600;color:var(--text-primary);letter-spacing:4px;text-transform:uppercase;margin-bottom:40px}
+        .footer-col a{display:block;font-size:16px;color:var(--text-secondary);text-decoration:none;margin-bottom:22px;font-weight:300;transition:all 0.5s var(--ease-out-expo)}
+        .footer-col a:hover{color:var(--text-primary);transform:translateX(8px)}
+        .footer-bottom{max-width:1700px;margin:0 auto;padding-top:80px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .footer-bottom p{font-size:14px;color:var(--text-muted)}
+        .footer-social{display:flex;gap:16px}
+        .footer-social a{width:56px;height:56px;border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.6s var(--ease-out-expo)}
+        .footer-social a:hover{background:var(--text-primary);border-color:var(--text-primary);color:var(--bg-primary);transform:translateY(-6px)}
+        
+        /* Responsive */
+        @media(max-width:1200px){.explore-grid{grid-template-columns:repeat(2,1fr)}.water-content{grid-template-columns:1fr}.nav-links{display:none}.mobile-menu-btn{display:flex}.cursor,.cursor-dot{display:none}}
+        @media(max-width:900px){nav{padding:20px 24px}section{padding:120px 24px}.stats{padding:80px 24px}.stats-grid{grid-template-columns:repeat(2,1fr)}.explore-grid{grid-template-columns:1fr}.courses-grid{grid-template-columns:1fr}.course-card{grid-template-columns:1fr}.market-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr}}
+        @media(max-width:600px){.hero-ctas{flex-direction:column;width:100%}.btn-primary,.btn-secondary{width:100%;justify-content:center}.stats-grid{grid-template-columns:1fr}.plans{flex-direction:column}.plan-chip{width:100%;text-align:center}.footer-bottom{flex-direction:column;gap:32px;text-align:center}.nav-cta{display:none}}
+    </style>
+</head>
+<body>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="scroll-progress" id="scrollProgress"><div class="scroll-progress-bar" id="scrollProgressBar"></div></div>
+    
+    <div class="loader" id="loader">
+        <div class="loader-bg"></div>
+        <div class="loader-content">
+            <div class="loader-logo"><span>K</span></div>
+            <div class="loader-title">Kaffeepedia</div>
+            <div class="loader-subtitle">The Science of Coffee</div>
+        </div>
+        <div class="loader-progress">
+            <div class="loader-progress-bar"><div class="loader-progress-fill" id="loaderProgress"></div></div>
+            <div class="loader-progress-text" id="loaderText">0%</div>
+        </div>
+    </div>
+
+    <nav id="nav">
+        <a href="#" class="nav-logo"><div class="nav-logo-mark"><span>K</span></div><span class="nav-logo-text">Kaffeepedia</span></a>
+        <div class="nav-menu">
+            <div class="nav-links">
+                <a href="#knowledge" class="active">Knowledge</a>
+                <a href="#water">Water</a>
+                <a href="#courses">Courses</a>
+                <a href="#market">Market</a>
+            </div>
+            <a href="#subscribe" class="nav-cta">Subscribe</a>
+        </div>
+        <div class="nav-right">
+            <button class="theme-toggle" id="themeToggle"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+            <button class="mobile-menu-btn" id="mobileMenuBtn"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+
+    <section class="hero" id="hero">
+        <canvas class="hero-canvas" id="heroCanvas"></canvas>
+        <div class="hero-bg">
+            <div class="hero-orb hero-orb-1"></div>
+            <div class="hero-orb hero-orb-2"></div>
+            <div class="hero-orb hero-orb-3"></div>
+            <div class="hero-grid"></div>
+            <div class="hero-grain"></div>
+            <div class="hero-vignette"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-eyebrow" id="heroEyebrow">Welcome to Kaffeepedia</div>
+            <h1 class="hero-title" id="heroTitle">
+                <span class="line"><span class="line-inner">The World's Most</span></span>
+                <span class="line"><span class="line-inner"><em>Comprehensive</em></span></span>
+                <span class="line"><span class="line-inner">Coffee Knowledge</span></span>
+            </h1>
+            <p class="hero-subtitle" id="heroSubtitle">From seed to cup — explore the science, master the craft, and understand the future of coffee through research-backed education.</p>
+            <div class="hero-ctas" id="heroCtas">
+                <a href="#knowledge" class="btn-primary"><span>Start Learning</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+                <a href="#water" class="btn-secondary"><span>Explore Water Science</span></a>
+            </div>
+        </div>
+        <div class="hero-scroll" id="heroScroll"><span class="hero-scroll-text">Scroll to explore</span><div class="hero-scroll-line"></div></div>
+    </section>
+
+    <div class="stats" id="stats">
+        <div class="stats-bg"></div>
+        <div class="stats-grid">
+            <div class="stat-item reveal delay-1"><div class="stat-number"><span class="counter" data-target="2400">0</span>+</div><div class="stat-label">Articles</div></div>
+            <div class="stat-item reveal delay-2"><div class="stat-number"><span class="counter" data-target="86">0</span></div><div class="stat-label">Courses</div></div>
+            <div class="stat-item reveal delay-3"><div class="stat-number"><span class="counter" data-target="124">0</span></div><div class="stat-label">Countries</div></div>
+            <div class="stat-item reveal delay-4"><div class="stat-number"><span class="counter" data-target="50">0</span>K+</div><div class="stat-label">Members</div></div>
+        </div>
+    </div>
+
+    <section class="water-section" id="water">
+        <div class="water-particles" id="waterParticles"></div>
+        <div class="water-content">
+            <div class="water-image reveal-left">
+                <div class="water-image-glow"></div>
+                <div class="water-image-container"><img src="water-bean.png" alt="Water Coffee Bean" loading="lazy"/></div>
+            </div>
+            <div class="water-text reveal-right">
+                <div class="section-header">
+                    <div class="section-eyebrow">Water Science</div>
+                    <h2 class="section-title">The Chemistry of Perfect Extraction</h2>
+                    <p class="section-subtitle">Water makes up 98% of your coffee. Understanding its chemistry is the key to unlocking extraordinary flavor.</p>
+                </div>
+                <div class="water-features">
+                    <div class="water-feature"><div class="water-feature-icon"><svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div><div class="water-feature-content"><h4>Total Dissolved Solids</h4><p>Optimal TDS ranges for espresso vs. filter brewing methods.</p></div></div>
+                    <div class="water-feature"><div class="water-feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="water-feature-content"><h4>Mineral Balance</h4><p>The role of calcium, magnesium, and bicarbonates in extraction.</p></div></div>
+                    <div class="water-feature"><div class="water-feature-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="water-feature-content"><h4>Water Recipes</h4><p>Custom mineral formulas from world champion baristas.</p></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="explore" id="knowledge">
+        <div class="section-header centered reveal">
+            <div class="section-eyebrow">Explore</div>
+            <h2 class="section-title">Master Every Dimension of Coffee</h2>
+            <p class="section-subtitle">From the molecular structure of caffeine to global trade economics — structured, science-backed knowledge.</p>
+        </div>
+        <div class="explore-grid">
+            <div class="explore-card reveal-rotate delay-1"><div class="explore-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div><h3 class="explore-card-title">Biology & Agronomy</h3><p class="explore-card-desc">Genetics, cultivation, varietals, soil science, and sustainable farming.</p><a href="#" class="explore-card-link">Explore<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+            <div class="explore-card reveal-rotate delay-2"><div class="explore-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2v7.31M14 9.3V1.99M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0M5.58 16.5h12.85"/></svg></div><h3 class="explore-card-title">Processing Science</h3><p class="explore-card-desc">Fermentation chemistry, drying methods, and experimental processing.</p><a href="#" class="explore-card-link">Explore<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+            <div class="explore-card reveal-rotate delay-3"><div class="explore-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a6 6 0 1 0 12 0c0-1.532-1.056-3.94-2-5-1.786 3-2.791 3-4 2z"/></svg></div><h3 class="explore-card-title">Roasting Mastery</h3><p class="explore-card-desc">Heat transfer, Maillard reactions, roast profiles, and quality control.</p><a href="#" class="explore-card-link">Explore<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+            <div class="explore-card reveal-rotate delay-4"><div class="explore-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg></div><h3 class="explore-card-title">Brewing & Extraction</h3><p class="explore-card-desc">Water chemistry, extraction physics, and recipe development.</p><a href="#" class="explore-card-link">Explore<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+            <div class="explore-card reveal-rotate delay-5"><div class="explore-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><h3 class="explore-card-title">Sensory Science</h3><p class="explore-card-desc">Flavor chemistry, cupping protocols, and sensory training.</p><a href="#" class="explore-card-link">Explore<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+            <div class="explore-card reveal-rotate delay-6"><div class="explore-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></div><h3 class="explore-card-title">Market & Economics</h3><p class="explore-card-desc">Global trade, futures markets, and supply chain analysis.</p><a href="#" class="explore-card-link">Explore<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+        </div>
+    </section>
+
+    <section class="courses" id="courses">
+        <div class="section-header centered reveal">
+            <div class="section-eyebrow">Learn</div>
+            <h2 class="section-title">Structured Courses for Every Level</h2>
+            <p class="section-subtitle">Interactive, science-backed learning paths from basics to professional certification.</p>
+        </div>
+        <div class="courses-grid">
+            <div class="course-card reveal delay-1"><div class="course-visual"><svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="course-content"><div class="course-level">Beginner</div><h3 class="course-title">Coffee Fundamentals</h3><p class="course-desc">The complete foundation — from plant biology to your first perfect cup.</p><div class="course-meta"><span>24 lessons</span><span>8 hours</span></div></div></div>
+            <div class="course-card reveal delay-2"><div class="course-visual"><svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8"><path d="M10 2v7.31M14 9.3V1.99M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0M5.58 16.5h12.85"/></svg></div><div class="course-content"><div class="course-level">Intermediate</div><h3 class="course-title">Extraction Science</h3><p class="course-desc">Master the variables that control flavor through physics and chemistry.</p><div class="course-meta"><span>32 lessons</span><span>12 hours</span></div></div></div>
+            <div class="course-card reveal delay-3"><div class="course-visual"><svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div><div class="course-content"><div class="course-level">Advanced</div><h3 class="course-title">Q-Grader Preparation</h3><p class="course-desc">Comprehensive preparation for Coffee Quality Institute certification.</p><div class="course-meta"><span>48 lessons</span><span>24 hours</span></div></div></div>
+            <div class="course-card reveal delay-4"><div class="course-visual"><svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div><div class="course-content"><div class="course-level">Professional</div><h3 class="course-title">Market Analysis</h3><p class="course-desc">Understanding futures, commodities, and global coffee economics.</p><div class="course-meta"><span>18 lessons</span><span>6 hours</span></div></div></div>
+        </div>
+    </section>
+
+    <section class="market" id="market">
+        <div class="section-header centered reveal">
+            <div class="section-eyebrow">Market</div>
+            <h2 class="section-title">Coffee Market Intelligence</h2>
+            <p class="section-subtitle">Real-time data and analysis to understand the global coffee economy.</p>
+        </div>
+        <div class="market-grid">
+            <div class="market-card reveal delay-1"><div class="market-label">Arabica (ICE)</div><div class="market-value">$3.24</div><div class="market-change up"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>2.4% today</div></div>
+            <div class="market-card reveal delay-2"><div class="market-label">Robusta (ICE)</div><div class="market-value">$5,420</div><div class="market-change up"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>1.1% today</div></div>
+            <div class="market-card reveal delay-3"><div class="market-label">Brazil Santos 4</div><div class="market-value">+18¢</div><div class="market-change down"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>0.5% differential</div></div>
+        </div>
+    </section>
+
+    <section class="subscribe" id="subscribe">
+        <div class="subscribe-inner reveal">
+            <div class="section-eyebrow" style="justify-content:center">Join Kaffeepedia</div>
+            <h2 class="section-title">Choose Your Path to Coffee Mastery</h2>
+            <div class="plans">
+                <div class="plan-chip"><span>Free</span></div>
+                <div class="plan-chip"><span>Explorer — $9/mo</span></div>
+                <div class="plan-chip active"><span>Professional — $29/mo</span></div>
+                <div class="plan-chip"><span>Enterprise</span></div>
+            </div>
+            <a href="#" class="btn-primary"><span>Compare Plans</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand"><a href="#" class="nav-logo"><div class="nav-logo-mark"><span>K</span></div><span class="nav-logo-text">Kaffeepedia</span></a><p>The world's most comprehensive source of coffee knowledge — built on science, clarity, and a passion for excellence.</p></div>
+            <div class="footer-col"><h4>Knowledge</h4><a href="#">Biology</a><a href="#">Processing</a><a href="#">Roasting</a><a href="#">Brewing</a></div>
+            <div class="footer-col"><h4>Learn</h4><a href="#">All Courses</a><a href="#">Certifications</a><a href="#">Workshops</a></div>
+            <div class="footer-col"><h4>Company</h4><a href="#">About</a><a href="#">Research</a><a href="#">Careers</a><a href="#">Contact</a></div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 Kaffeepedia. All rights reserved.</p>
+            <div class="footer-social">
+                <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l11.733 16h4.267l-11.733-16z"/></svg></a>
+                <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+                <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48"/></svg></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ===== CUSTOM CURSOR =====
+        const cursor = document.getElementById('cursor');
+        const cursorDot = document.getElementById('cursorDot');
+        let mouseX = 0, mouseY = 0, cursorX = 0, cursorY = 0;
+        
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+        });
+        
+        function animateCursor() {
+            cursorX += (mouseX - cursorX) * 0.15;
+            cursorY += (mouseY - cursorY) * 0.15;
+            cursor.style.left = cursorX + 'px';
+            cursor.style.top = cursorY + 'px';
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+        
+        document.querySelectorAll('a, button, .explore-card, .course-card, .market-card, .water-feature, .plan-chip').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+        });
+        
+        document.addEventListener('mousedown', () => cursor.classList.add('clicking'));
+        document.addEventListener('mouseup', () => cursor.classList.remove('clicking'));
+        
+        // ===== LOADER =====
+        const loader = document.getElementById('loader');
+        const loaderProgress = document.getElementById('loaderProgress');
+        const loaderText = document.getElementById('loaderText');
+        let progress = 0;
+        
+        const loadInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(loadInterval);
+                setTimeout(() => {
+                    loader.classList.add('exit');
+                    document.getElementById('nav').classList.add('visible');
+                    setTimeout(() => {
+                        document.getElementById('heroEyebrow').classList.add('animate');
+                        document.getElementById('heroTitle').classList.add('animate');
+                        document.getElementById('heroSubtitle').classList.add('animate');
+                        document.getElementById('heroCtas').classList.add('animate');
+                        document.getElementById('heroScroll').classList.add('animate');
+                    }, 300);
+                }, 500);
+            }
+            loaderProgress.style.width = progress + '%';
+            loaderText.textContent = Math.floor(progress) + '%';
+        }, 100);
+        
+        // ===== SCROLL PROGRESS =====
+        const scrollProgress = document.getElementById('scrollProgress');
+        const scrollProgressBar = document.getElementById('scrollProgressBar');
+        
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            
+            scrollProgressBar.style.width = scrollPercent + '%';
+            scrollProgress.classList.toggle('visible', scrollTop > 100);
+            document.getElementById('nav').classList.toggle('scrolled', scrollTop > 100);
+        });
+        
+        // ===== THEME TOGGLE =====
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const savedTheme = localStorage.getItem('kaffeepedia-theme') || 'dark';
+        html.setAttribute('data-theme', savedTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('kaffeepedia-theme', newTheme);
+        });
+        
+        // ===== ACTIVE NAV =====
+        const navLinks = document.querySelectorAll('.nav-links a');
+        const sections = document.querySelectorAll('section[id]');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                if (scrollY >= section.offsetTop - 200) current = section.getAttribute('id');
+            });
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+            });
+        });
+        
+        // ===== SCROLL REVEAL =====
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('active');
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -100px 0px' });
+        
+        document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right, .reveal-rotate').forEach(el => revealObserver.observe(el));
+        
+        // ===== COUNTER ANIMATION =====
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const counter = entry.target;
+                    const target = parseInt(counter.dataset.target);
+                    const duration = 2000;
+                    const start = performance.now();
+                    
+                    const animate = (now) => {
+                        const elapsed = now - start;
+                        const progress = Math.min(elapsed / duration, 1);
+                        const easeOut = 1 - Math.pow(1 - progress, 3);
+                        counter.textContent = Math.floor(target * easeOut);
+                        if (progress < 1) requestAnimationFrame(animate);
+                        else counter.textContent = target;
+                    };
+                    requestAnimationFrame(animate);
+                    counterObserver.unobserve(counter);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        document.querySelectorAll('.counter').forEach(el => counterObserver.observe(el));
+        
+        // ===== WATER PARTICLES =====
+        const waterParticles = document.getElementById('waterParticles');
+        for (let i = 0; i < 40; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'water-particle';
+            particle.style.cssText = `
+                left: ${Math.random() * 100}%;
+                top: ${Math.random() * 100}%;
+                width: ${2 + Math.random() * 4}px;
+                height: ${2 + Math.random() * 4}px;
+                animation: particleFloat ${8 + Math.random() * 12}s linear infinite;
+                animation-delay: ${Math.random() * 10}s;
+            `;
+            waterParticles.appendChild(particle);
+        }
+        
+        const particleStyle = document.createElement('style');
+        particleStyle.textContent = `
+            @keyframes particleFloat {
+                0% { transform: translateY(0) translateX(0); opacity: 0; }
+                10% { opacity: 0.4; }
+                90% { opacity: 0.4; }
+                100% { transform: translateY(-100vh) translateX(${Math.random() * 40 - 20}px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(particleStyle);
+        
+        // ===== HERO CANVAS PARTICLES =====
+        const canvas = document.getElementById('heroCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        function createParticles() {
+            particles = [];
+            const count = Math.floor(window.innerWidth / 15);
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    size: Math.random() * 2 + 0.5,
+                    opacity: Math.random() * 0.4 + 0.1
+                });
+            }
+        }
+        
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const color = html.getAttribute('data-theme') === 'dark' ? '234, 231, 224' : '10, 16, 24';
+            
+            particles.forEach((p, i) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.y > canvas.height) p.y = 0;
+                
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${color}, ${p.opacity})`;
+                ctx.fill();
+                
+                particles.forEach((p2, j) => {
+                    if (i === j) return;
+                    const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(${color}, ${0.04 * (1 - dist / 150)})`;
+                        ctx.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(drawParticles);
+        }
+        
+        resizeCanvas();
+        createParticles();
+        drawParticles();
+        window.addEventListener('resize', () => { resizeCanvas(); createParticles(); });
+        
+        // ===== SMOOTH SCROLL =====
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+        
+        // ===== PLAN CHIPS =====
+        document.querySelectorAll('.plan-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                document.querySelectorAll('.plan-chip').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // ===== PARALLAX ON SCROLL =====
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            document.querySelectorAll('.hero-orb').forEach((orb, i) => {
+                const speed = 0.03 + (i * 0.02);
+                orb.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+        });
+        
+        // ===== TILT EFFECT ON CARDS =====
+        document.querySelectorAll('.explore-card, .course-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-20px)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        });
+    </script>
+</body>
+</html>
