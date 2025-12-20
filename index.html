@@ -828,33 +828,34 @@ if (heroIntro) {
         });
     });
     
-    // ===== MOBILE MENU TOGGLE =====
-const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-const mobileMenu = document.getElementById('mobileMenu');
+    <script>
+  // ===== MOBILE MENU TOGGLE =====
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
 
-if (mobileMenuBtn && mobileMenu) {
-  mobileMenuBtn.addEventListener('click', () => {
-    mobileMenuBtn.classList.toggle('active');
-    mobileMenu.classList.toggle('open');
-  });
-
-  // close when clicking a link
-  mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      mobileMenuBtn.classList.remove('active');
-      mobileMenu.classList.remove('open');
+  if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenuBtn.classList.toggle('active');
+      mobileMenu.classList.toggle('open');
     });
-  });
 
-  // close if you tap outside
-  document.addEventListener('click', (e) => {
-    const isInside = mobileMenu.contains(e.target) || mobileMenuBtn.contains(e.target);
-    if (!isInside) {
-      mobileMenuBtn.classList.remove('active');
-      mobileMenu.classList.remove('open');
-    }
-  });
+    // close when clicking a link
+    mobileMenu.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        mobileMenuBtn.classList.remove('active');
+        mobileMenu.classList.remove('open');
+      });
+    });
 
+    // close if you tap outside
+    document.addEventListener('click', (e) => {
+      const isInside = mobileMenu.contains(e.target) || mobileMenuBtn.contains(e.target);
+      if (!isInside) {
+        mobileMenuBtn.classList.remove('active');
+        mobileMenu.classList.remove('open');
+      }
+    });
+  }
 </script>
 
 </body>
