@@ -204,6 +204,66 @@
   visibility:hidden;
   pointer-events:none;
 }
+/* ===== SCROLL INTRO (ZOOM OUT → TEXT REVEAL) ===== */
+.scroll-intro{
+  height:200vh;            /* controls how long the intro lasts */
+  position:relative;
+}
+
+.scroll-intro-sticky{
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow:hidden;
+}
+
+.scroll-intro-media{
+  position:absolute;
+  inset:0;
+  background-image:url("IMG_6782.jpeg");
+  background-size:cover;
+  background-position:center;
+  transform:scale(1.25);   /* starts zoomed in */
+  will-change:transform;
+}
+
+.scroll-intro-shade{
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 100%);
+}
+
+.scroll-intro-copy{
+  position:relative;
+  z-index:2;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:18px;
+  filter: blur(6px);
+
+  opacity:0;
+  transform:translateY(16px);
+  transition:opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+}
+
+.scroll-intro-k{
+  width:120px;height:120px;border-radius:50%;
+  border:1px solid rgba(234,231,224,0.18);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Playfair Display',serif;
+  font-size:56px;font-style:italic;
+  color:var(--cream);
+}
+
+.scroll-intro-line{
+  font-size:12px;
+  letter-spacing:8px;
+  text-transform:uppercase;
+  color:rgba(234,231,224,0.75);
+}
     /* Reveal Animations */
     .reveal{opacity:0;transform:translateY(120px);transition:all 1.4s var(--ease-out-expo)}
     .reveal.active{opacity:1;transform:translateY(0)}
@@ -416,18 +476,21 @@
   <a href="#market">Market</a>
   <a href="#subscribe">Subscribe</a>
 </div>
+<!-- SCROLL INTRO (ZOOM OUT → TEXT REVEAL) -->
+<section class="scroll-intro" id="scrollIntro">
+  <div class="scroll-intro-sticky">
+    <div class="scroll-intro-media" id="introMedia"></div>
+    <div class="scroll-intro-shade"></div>
+
+    <div class="scroll-intro-copy" id="introCopy">
+      <div class="scroll-intro-k">K</div>
+      <div class="scroll-intro-line">THE SCIENCE OF COFFEE</div>
+    </div>
+  </div>
+</section>
 <section class="hero" id="hero">
     <canvas class="hero-canvas" id="heroCanvas"></canvas>
     <!-- CINEMATIC INTRO IMAGE OVERLAY -->
-<div class="hero-intro" id="heroIntro" aria-hidden="true">
-  <div class="hero-intro-media" style="background-image:url('IMG_6553.png')"></div>
-  <div class="hero-intro-shade"></div>
-
-  <div class="hero-intro-copy" id="heroIntroCopy">
-    <div class="hero-intro-k">K</div>
-    <div class="hero-intro-line">THE SCIENCE OF COFFEE</div>
-  </div>
-</div>
     <div class="hero-bg">
         <div class="hero-orb hero-orb-1"></div>
         <div class="hero-orb hero-orb-2"></div>
@@ -603,11 +666,6 @@
                 loader.classList.add('exit');
                 document.getElementById('nav').classList.add('visible');
                 /* ===== HERO INTRO SEQUENCE ===== */
-const heroIntro = document.getElementById('heroIntro');
-if (heroIntro) {
-  heroIntro.classList.add('show-copy');
-  setTimeout(() => heroIntro.classList.add('hide'), 1600);
-}
                 setTimeout(() => {
                     document.getElementById('heroEyebrow').classList.add('animate');
                     document.getElementById('heroTitle').classList.add('animate');
@@ -827,8 +885,37 @@ if (heroIntro) {
             card.style.transform = '';
         });
     });
-    
-  // ===== MOBILE MENU TOGGLE =====
+   
+     // ===== SCROLL INTRO (ZOOM OUT → TEXT REVEAL) =====
+const introSection = document.getElementById('scrollIntro');
+const introMedia = document.getElementById('introMedia');
+const introCopy = document.getElementById('introCopy');
+
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+function introScrollAnim(){
+  if (!introSection || !introMedia || !introCopy) return;
+
+  const rect = introSection.getBoundingClientRect();
+  const vh = window.innerHeight;
+
+  // progress 0 → 1 while you scroll through the intro section
+  const progress = clamp((vh - rect.top) / (vh * 1.0), 0, 1);
+
+  // zoom out: 1.25 → 1.00
+  const scale = 1.25 - (0.25 * progress);
+  introMedia.style.transform = `scale(${scale})`;
+
+  // text appears late (after ~55%)
+  const show = clamp((progress - 0.55) / 0.25, 0, 1);
+  introCopy.style.opacity = show;
+  introCopy.style.transform = `translateY(${16 * (1 - show)}px)`;
+
+  requestAnimationFrame(introScrollAnim);
+}
+requestAnimationFrame(introScrollAnim);
+  
+// ===== MOBILE MENU TOGGLE =====
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
   const mobileMenu = document.getElementById('mobileMenu');
 
