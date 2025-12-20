@@ -136,7 +136,74 @@
     .hero-scroll-line{width:1px;height:100px;background:linear-gradient(to bottom,var(--text-muted),transparent);position:relative;overflow:hidden}
     .hero-scroll-line::before{content:'';position:absolute;top:-100%;left:0;width:100%;height:50%;background:var(--text-primary);animation:scrollLineMove 2s ease-in-out infinite}
     @keyframes scrollLineMove{0%{top:-50%}100%{top:150%}}
-    
+    /* ===== HERO INTRO OVERLAY (CINEMATIC) ===== */
+.hero-intro{
+  position:absolute;
+  inset:0;
+  z-index:25;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:1;
+  visibility:visible;
+  transition:opacity 1.2s var(--ease-out-expo), visibility 1.2s var(--ease-out-expo);
+}
+
+.hero-intro-media{
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  background-position:center;
+  transform:scale(1.05);
+  filter:contrast(1.05) saturate(0.95);
+}
+
+.hero-intro-shade{
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.85) 100%);
+}
+
+.hero-intro-copy{
+  position:relative;
+  text-align:center;
+  transform:translateY(12px);
+  opacity:0;
+  transition:opacity 1s var(--ease-out-expo), transform 1s var(--ease-out-expo);
+}
+
+.hero-intro.show-copy .hero-intro-copy{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.hero-intro-k{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  border:1px solid rgba(234,231,224,0.18);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 24px;
+  font-family:'Playfair Display',serif;
+  font-size:56px;
+  font-style:italic;
+  color:var(--cream);
+}
+
+.hero-intro-line{
+  font-size:12px;
+  letter-spacing:8px;
+  text-transform:uppercase;
+  color:rgba(234,231,224,0.75);
+}
+
+.hero-intro.hide{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
     /* Reveal Animations */
     .reveal{opacity:0;transform:translateY(120px);transition:all 1.4s var(--ease-out-expo)}
     .reveal.active{opacity:1;transform:translateY(0)}
@@ -253,6 +320,54 @@
     .footer-social a{width:56px;height:56px;border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.6s var(--ease-out-expo)}
     .footer-social a:hover{background:var(--text-primary);border-color:var(--text-primary);color:var(--bg-primary);transform:translateY(-6px)}
     
+    /* Mobile menu panel */
+.mobile-menu{
+  position:fixed;
+  top:90px;
+  left:24px;
+  right:24px;
+  background:rgba(5,10,16,0.92);
+  backdrop-filter:blur(40px);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:18px;
+  display:grid;
+  gap:8px;
+  z-index:1200;
+
+  opacity:0;
+  transform:translateY(-10px);
+  pointer-events:none;
+  transition:all 0.5s var(--ease-out-expo);
+}
+[data-theme="light"] .mobile-menu{background:rgba(234,231,224,0.92)}
+
+.mobile-menu.open{
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+
+.mobile-menu a{
+  display:block;
+  padding:14px 16px;
+  border-radius:16px;
+  text-decoration:none;
+  color:var(--text-secondary);
+  border:1px solid transparent;
+  transition:all 0.4s var(--ease-out-expo);
+}
+.mobile-menu a:hover{
+  color:var(--text-primary);
+  border-color:var(--border);
+  background:var(--bg-tertiary);
+}
+
+/* Hamburger animation */
+.mobile-menu-btn.active span:nth-child(1){transform:translateY(8px) rotate(45deg)}
+.mobile-menu-btn.active span:nth-child(2){opacity:0}
+.mobile-menu-btn.active span:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
+    
     /* Responsive */
     @media(max-width:1200px){.explore-grid{grid-template-columns:repeat(2,1fr)}.water-content{grid-template-columns:1fr}.nav-links{display:none}.mobile-menu-btn{display:flex}.cursor,.cursor-dot{display:none}}
     @media(max-width:900px){nav{padding:20px 24px}section{padding:120px 24px}.stats{padding:80px 24px}.stats-grid{grid-template-columns:repeat(2,1fr)}.explore-grid{grid-template-columns:1fr}.courses-grid{grid-template-columns:1fr}.course-card{grid-template-columns:1fr}.market-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr}}
@@ -294,7 +409,13 @@
         <button class="mobile-menu-btn" id="mobileMenuBtn"><span></span><span></span><span></span></button>
     </div>
 </nav>
-
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#knowledge">Knowledge</a>
+  <a href="#water">Water</a>
+  <a href="#courses">Courses</a>
+  <a href="#market">Market</a>
+  <a href="#subscribe">Subscribe</a>
+</div>
 <section class="hero" id="hero">
     <canvas class="hero-canvas" id="heroCanvas"></canvas>
     <!-- CINEMATIC INTRO IMAGE OVERLAY -->
@@ -481,6 +602,12 @@
             setTimeout(() => {
                 loader.classList.add('exit');
                 document.getElementById('nav').classList.add('visible');
+                /* ===== HERO INTRO SEQUENCE ===== */
+const heroIntro = document.getElementById('heroIntro');
+if (heroIntro) {
+  heroIntro.classList.add('show-copy');
+  setTimeout(() => heroIntro.classList.add('hide'), 1600);
+}
                 setTimeout(() => {
                     document.getElementById('heroEyebrow').classList.add('animate');
                     document.getElementById('heroTitle').classList.add('animate');
@@ -700,6 +827,34 @@
             card.style.transform = '';
         });
     });
+    
+    // ===== MOBILE MENU TOGGLE =====
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+
+if (mobileMenuBtn && mobileMenu) {
+  mobileMenuBtn.addEventListener('click', () => {
+    mobileMenuBtn.classList.toggle('active');
+    mobileMenu.classList.toggle('open');
+  });
+
+  // close when clicking a link
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileMenuBtn.classList.remove('active');
+      mobileMenu.classList.remove('open');
+    });
+  });
+
+  // close if you tap outside
+  document.addEventListener('click', (e) => {
+    const isInside = mobileMenu.contains(e.target) || mobileMenuBtn.contains(e.target);
+    if (!isInside) {
+      mobileMenuBtn.classList.remove('active');
+      mobileMenu.classList.remove('open');
+    }
+  });
+
 </script>
 
 </body>
